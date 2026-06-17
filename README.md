@@ -193,10 +193,83 @@ IPs/Macros with user-defined, fixed locations placed before automated routing.
 * **Transition Time (Slew):** Time taken to transition between thresholds (typically 20% to 80% of Vdd).
 
 ---
+## ⚡ 11. Static Behavior Evaluation: CMOS Inverter Robustness
+The robustness of a CMOS inverter is analyzed by observing its **Voltage Transfer Characteristic (VTC)**.
 
-## ⚡ 11. VTC and SPICE Simulations
+* **VTC Analysis:** We examine how the $V_{out}$ vs. $V_{in}$ graph shifts in response to variations in the Width-to-Length ($W/L$) ratio of the PMOS and NMOS transistors.
+* **Switching Threshold ($V_M$):** Found at the intersection where $V_{in} = V_{out}$. At this equilibrium point, both the PMOS and NMOS transistors are operating in the saturation region, meaning both are partially "on."
 
+---
 
-* **Spice Deck:** Describes component connectivity, values, and nodes.
-* **MOSFET Syntax:** `M1 drain gate source substrate`
-* **Static Behavior:** Evaluating how the CMOS Inverter $V_{out}$ vs $V_{in}$ graph changes as the **W/L ratio** of PMOS and NMOS transistors varies. The **switching threshold** is the point where both transistors are in the saturation region.
+## 🏭 12. 16-Mask CMOS Fabrication Process
+The fabrication process involves a sequence of 16 photolithography masks to precisely define the layers required for CMOS integration.
+
+### Core Fabrication Sequence
+1. **N-Well Formation (Mask 1):** Establishing the region for PMOS devices in the p-substrate.
+2. **Active Area (Mask 2):** Defining transistor formation regions.
+3. **Isolation (Mask 3):** Growing field oxide for device insulation.
+4. **Threshold Adjustment (Masks 4-5):** Ion implantation to tune $V_t$ for NMOS and PMOS.
+5. **Gate Stack:** Gate oxide growth followed by Polysilicon patterning (Mask 6).
+6. **Doping (Masks 7-10):** LDD and Source/Drain implantation.
+7. **Interconnects (Masks 11-14):** Contact formation, Metal-1, Vias, and Metal-2 layers.
+8. **Finalization (Masks 15-16):** Passivation layer deposition and Bond Pad openings for packaging.
+
+---
+
+## 🧪 13. Lab: Characterizing a Custom Inverter Cell
+To analyze a standard cell, we perform layout extraction and SPICE simulation using open-source tools.
+
+---
+
+### Layout Extraction
+Clone the repository and open the layout in **Magic**:
+```bash
+git clone [https://github.com/nickson-jose/vsdstdcelldesign.git](https://github.com/nickson-jose/vsdstdcelldesign.git)
+
+magic -T sky130A.tech sky130_inv.mag &
+```
+
+CMOS Inverter Layout View on Magic
+![image](./images/cmos_inverter.png)
+
+----
+#### Extracting the SPICE Netlist from Magic
+To convert the physical layout into a format that the circuit simulator can understand, use the `tkcon` console in Magic and execute the following commands:
+
+```tcl
+extract all
+ext2spice cthresh 0 rthresh 0
+ext2spice
+```
+
+![image](./images/spice_netlist_creation.png)
+
+---
+Screenshot of created spice file: 
+![image](./images/inverter_spice_file.png)
+
+---
+Running ngspice Simulation
+![image](./images/transient_sol_inv.png)
+
+---
+
+Plotting using the command 
+```
+plot y vs time a
+![image](./images/intersection_point.png)  
+```
+
+---
+Generated PLot :
+![image](./images/inv_plot_yvstime.png) 
+
+---
+
+#### Propagation Delay
+Propagation delay measures the time elapsed between the input signal reaching its $50\%$ threshold and the output signal reaching its corresponding $50\%$ threshold.
+
+* **Threshold Point ($50\% V_{dd}$):** $1.65\text{V}$
+##
+
+![image](./images/propagation_delay.png)
