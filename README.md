@@ -273,3 +273,38 @@ Propagation delay measures the time elapsed between the input signal reaching it
 ##
 
 ![image](./images/propagation_delay.png)
+
+
+## Screenshot of poly rules
+![image](./images/periphery_rules.png)
+
+![image](./images/drc_test_folder.png)
+![image](./images/poly_magic_file.png)
+![image](./images/pol3_mag.png)
+![image](./images/mask_layer_info.png)
+![image](./images/nwell_mag.png)
+![image](./images/nwell6.png)
+![image](./images/nwell_newdrc.png)
+###
+---
+###
+![image](./images/define_port.png)
+
+## The data inside the sky130A tech file :
+![image](./images/vim_sky130.png)
+
+![image](./images/cifmaxwidth.png)
+
+![image](./images/variant.png)
+
+## Generating the LEF File of the CMOS Inverter 
+
+![image](./images/generate_lef.png)
+
+![image](./images/inv_lef.png)
+
+
+
+
+
+
