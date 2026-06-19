@@ -1,7 +1,7 @@
 # SoC-Design-and-Planning-VSD
 RTL-to-GDSII physical design flow using OpenLANE &amp; Sky130 PDK | VSD SoC Design and Planning Workshop.
 
-# VSD Course - Day 1: Introduction to Chips, Pads, Core, Die, and IPs
+# Introduction to Chips, Pads, Core, Die, and IPs
 
 ## 📖 Overview
 This document summarizes the core concepts from Day 1 of the VSD Course. It covers the fundamental anatomy of a System on a Chip (SoC), key semiconductor terminology, the software-to-hardware bridge (ISA), and the initial stages of the physical design flow (RTL to GDSII).
@@ -61,62 +61,6 @@ The RTL to GDSII flow represents the physical design steps required to turn a sy
 Placement determines the exact physical locations of all standard cells on the core. It is done in two distinct steps:
 1.  **Global Placement:** Places cells roughly to optimize wire length and timing, without worrying about overlaps.
 2.  **Detailed Placement:** Refines the global placement, legalizing cell positions to ensure there are no overlapping cells and that they snap to the site rows.
-
-# VSD Course Documentation
-
-## 📖 Overview
-This repository contains notes and lab documentation from the VSD Course, covering the end-to-end process of digital ASIC design—from fundamental silicon anatomy to open-source physical implementation.
-
----
-
-## 🔬 1. Anatomy of an SoC (System on a Chip)
-A **System on a Chip (SoC)** is an entire computer system compressed onto a single piece of silicon. 
-
-* **Physical Appearance:** The IC we see in real life is usually just a ceramic protective covering. At its center lies the main silicon chip, which communicates with the outside world via **wire bonding**.
-* **Core:** The inner region of the chip where the primary circuit logic lives. 
-* **Die:** The region encompassing both the Core and the I/O Pads (i.e., `Die = Core + Pads`).
-
----
-
-## 📚 2. Key Industry Terminology
-* **Foundry:** The physical manufacturing facility where chips are fabricated (e.g., TSMC, GlobalFoundries).
-* **Foundry IPs:** Intellectual Property blocks that require specialized process knowledge (e.g., PLLs, SRAMs).
-* **Macros:** Purely digital, reusable logic blocks.
-
----
-
-## 🌉 3. The Software to Hardware Bridge (ISA)
-The **Instruction Set Architecture (ISA)** acts as the critical bridge between software programs and hardware.
-
-1. **High-Level Code:** Written in C/C++.
-2. **Compilation:** Converted to an executable file.
-3. **Assembly:** Converted into **Binary Machine Code** (0s and 1s).
-4. **RTL Implementation:** The RTL represents the ISA in hardware logic.
-5. **Synthesis:** RTL is synthesized into a **Netlist** (logic gates and connections).
-6. **Physical Layout:** The netlist is implemented into a physical geometric layout.
-
----
-
-## 🛠️ 4. Digital ASIC Design & PDKs
-> `ASIC = RTL IPs + EDA Tools + PDK Data`
-
-* **Process Design Kits (PDKs):** The interface between Foundries and Designers. It includes **DRC** (Design Rule Check), **LVS** (Layout Versus Schematic), and **PEX** (Parasitic Extraction) rules.
-
----
-
-## ⚙️ 5. Simplified RTL to GDSII Flow
-
-
-### A. Floor and Power Planning
-* **Chip Floor Planning:** Partitioning the die and placing I/O Pads.
-* **Macro Floor Planning:** Defining dimensions, pin locations, and routing tracks.
-* **Power Planning:** Constructing a power network with multiple VDD and GND pins to reduce resistance.
-
-### B. Placement
-1. **Global Placement:** Rough placement to optimize wire length and timing.
-2. **Detailed Placement:** Legalizing cell positions to ensure no overlaps.
-
----
 
 ## 🌐 6. Open Source ASIC Flow: OpenLANE
 **OpenLANE** is an automated RTL-to-GDSII flow designed to produce a clean GDSII without human intervention. It is optimized for the **SkyWater 130nm Open PDK**.
@@ -266,7 +210,7 @@ Generated PLot :
 
 ---
 
-#### Propagation Delay
+## 14. Propagation Delay
 Propagation delay measures the time elapsed between the input signal reaching its $50\%$ threshold and the output signal reaching its corresponding $50\%$ threshold.
 
 * **Threshold Point ($50\% V_{dd}$):** $1.65\text{V}$
@@ -303,8 +247,241 @@ Propagation delay measures the time elapsed between the input signal reaching it
 
 ![image](./images/inv_lef.png)
 
+![image](./images/custom_lef.png)
+
+---
+
+## ⏱️ 15. Setup Time Analysis (Ideal vs. Real Clocks)
+
+Static Timing Analysis (STA) verifies that data stabilizes before the clock edge captures it, avoiding metastability issues.
+
+### A. Timing under an Ideal Clock
+In an ideal scenario with zero clock network delay, the data path's total combinational delay ($\theta$) must simply be less than the clock period ($T$):
+
+$$\theta < T$$
+
+* **Fan-out and Slew:** A higher fan-out (driving more load gates) increases output capacitance, which directly increases the **slew** (transition time) and degrades signal speed.
+* **Timing Margins:** In practice, an ideal model must still account for the capture flip-flop's **Setup Time** (minimum time data must be stable before the clock edge), **Jitter** (temporary clock period variations), and **Uncertainty** (random noise).
+
+### B. Timing under a Real Clock
+Real clocks pass through a network of distribution buffers, introducing a **Clock Network Delay** (insertion delay). 
+* Let $\Delta_1$ be the buffer delay to the launch flip-flop.
+* Let $\Delta_2$ be the buffer delay to the capture flip-flop.
+
+$$\theta + \Delta_1 < T + \Delta_2$$
+
+> **Clock Skew:** The spatial difference in clock arrival times between the launch and capture flops:
+> $$\text{Skew} = \Delta_2 - \Delta_1$$
+
+### C. The Complete Setup Equation
+When incorporating all real-world constraints, the complete setup analysis expression is defined as:
+
+$$\theta + \Delta_1 < (T + \Delta_2) - \text{Setup Time} - \text{Jitter}$$
+
+* **Data Arrival Time (LHS):** The time it takes for data to launch and propagate through the combinational logic ($\theta + \Delta_1$).
+* **Data Required Time (RHS):** The latest allowable time for data to arrive at the destination pin without violating setup constraints ($(T + \Delta_2) - \text{Setup Time} - \text{Jitter}$).
+
+#### Setup Slack and Violations
+Slack measures the safety margin of a design. For setup analysis, it is calculated as:
+$$\text{Setup Slack} = \text{Data Required Time} - \text{Data Arrival Time}$$
+
+* **Positive Slack ($\ge 0$):** The timing requirements are met successfully.
+* **Negative Slack ($< 0$):** A **Setup Violation** has occurred, meaning the data arrived too late to be successfully captured.
+
+---
+
+![image](./images/base_sdc.png)
+
+![image](./images/pre_sta_config.png)
+
+![image](./images/sta_pre_sta.png)
+
+---
+## 🔏 16. Clock Tree Synthesis (CTS) & Shielding
+
+Clock Tree Synthesis balances the arrival of the clock signal to every sequential element across the chip.
+
+* **Symmetrical Repeaters:** The buffers used during CTS are specially designed to have perfectly equal rise and fall times to maintain a stable clock duty cycle.
+* **Clock Net Shielding:** Because clock lines switch constantly, they generate severe electromagnetic interference. Clock nets are shielded by running parallel VDD/GND lines next to them. This protects the clock from the outside world and avoids **Crosstalk**, **Glitches**, and **Delta Delay** caused by switching neighboring signal wires.
+
+---
+![image](./images/cts_tcl.png) 
+
+## 🔒 17. Hold Timing Analysis
+
+Hold analysis ensures that the data launched by the current clock edge does not overwrite the data captured by the previous clock edge at the destination flip-flop.
+
+### A. Core Concept
+The combinational delay must be long enough to survive the hold time ($H$) requirements of the capture register:
+
+$$\theta > H$$
+
+### B. Real Clock Constraints
+With insertion delays ($\Delta_1, \Delta_2$) and uncertainty taken into account, the real hold timing expression becomes:
+
+$$\theta + \Delta_1 > H + \Delta_2 + \text{Uncertainty}$$
+
+* **Data Arrival Time (LHS):** $\theta + \Delta_1$
+* **Data Required Time (RHS):** $H + \Delta_2 + \text{Uncertainty}$
+
+#### Hold Slack Calculation
+Unlike setup, hold slack checks that data arrives *after* the required window, changing the equation order:
+$$\text{Hold Slack} = \text{Data Arrival Time} - \text{Data Required Time}$$
+
+* Hold violations are critical because they **cannot** be fixed by lowering the chip's external operating clock frequency after fabrication.
+
+---
+
+## 💻 18. Lab: Post-CTS Timing Analysis inside OpenROAD
+
+After completing Clock Tree Synthesis (CTS), we invoke the **OpenROAD** tool internally to perform timing analysis using the actual propagated clock network rather than an ideal clock.
+
+### OpenROAD Initialization and Database Setup
+
+Once inside the OpenROAD environment, run the following sequence of commands to load the design data, link the timing libraries, and configure the clock network:
+
+```tcl
+# 1. Read the merged Library Exchange Format (LEF) file containing cell macro definitions
+read_lef /OpenLane/designs/picorv32a/runs/24-03_10-03/tmp/merged.nom.lef
+
+# 2. Read the Design Exchange Format (DEF) file generated after the CTS stage
+read_def /OpenLane/designs/picorv32a/runs/24-03_10-03/results/cts/picorv32a.def
+
+# 3. Create and save an OpenROAD database (.db) to preserve the current design state
+write_db pico_cts.db
+
+# 4. Reload the newly created database into OpenROAD
+read_db pico_cts.db
+
+# 5. Import the post-CTS structural Verilog netlist
+read_verilog /OpenLane/designs/picorv32a/runs/24-03_10-03/results/synthesis/picorv32a.v
+
+# 6. Load the complete timing library (.lib) specified by the environment variables
+read_liberty $::env(LIB_SYNTH_COMPLETE)
+
+# 7. Bind the Verilog netlist logic structures to the physical timing library
+link_design picorv32a
+
+# 8. Load the custom Synopsys Design Constraints (SDC) file defining timing goals
+read_sdc /OpenLane/designs/picorv32a/src/my_base.sdc
+
+# 9. Direct the timing engine to calculate real latency delays for all clock networks
+set_propagated_clock [all_clocks]
+```
+---
+
+![image](./images/reading_openlef_openroad.png)
+
+![image](./images/pico_cts_db_file_creation.png)
+
+![image](./images/deffile_reading.png)
+
+---
+
+
+## Final RTL to GDSII using TritonRoute & OpenSTA
+
+Generating Power Distribution Network
+## Power Distribution Network : 
+```tcl
+gen_pdn
+```
+
+Screenshots of PDN def
+![image](./images/pdn_gen.png)
+
+## 🗺️ 19. Routing and the Design Rule Check (DRC) Stage
+
+Once cells are placed and the clock tree is built, routing connects the physical signal nets together.
+
+### A. Maze Routing & Lee's Algorithm
+The router uses algorithms to establish the most efficient connection path between two points (Source and Target) while generating minimal zigzagging lines.
 
 
 
+* **How it works:** The algorithm maps a grid over the layout background. Starting at the source point, it labels adjacent open grid squares sequentially ($1, 2, 3 \dots$) until it hits the target point. 
+* **Path Selection:** The router traces backward along the path containing the least total number of bends to minimize wire length and resistance.
+
+
+![image](./images/var_routing.png)
+
+### B. Design Rule Checks (DRC)
+Foundries impose geometric constraints on layouts to account for physical limitations in **optical lithography** (the light wavelength limits used to print features on silicon). Common routing rules include:
+
+* **Wire Width:** The minimum width of a metal trace to prevent fractures or electromigration.
+* **Wire Spacing:** The minimum empty gap between two adjacent parallel wires.
+* **Wire Pitch:** The center-to-center distance between neighboring wires (`Pitch = Width + Spacing`).
+* **Via Width & Spacing:** Size and clearance constraints for the vertical interlayer contacts (vias).
+
+#### Signal Shorts and Layering
+If two signal wires cross or get too close, a **Signal Short** occurs, resulting in permanent functionality failure. Routers resolve this routing congestion by moving intersecting lines to different metal layers (e.g., using Metal-1 for horizontal routing and Metal-2 for vertical routing).
+
+
+## TritonRoute Algorithm 
+![image](./images/tritonroute_algo.png)
+
+---
+
+## 🎓 Key Learnings & Takeaways
+
+As an Electronics and Communication Engineering (ECE) student and VLSI enthusiast, this course effectively bridged the gap between academic textbook theory and industry-standard ASIC physical design workflows.
+
+1. **Physical SoC Architecture**
+   * Learned that a commercial IC package is simply a protective shell housing the internal silicon **die**.
+   * Discovered how the die is structurally split into an inner **core** (where the circuit logic lives) and outer **I/O pads** connected to the external world via wire bonding.
+
+2. **Core Geometry Optimization**
+   * Mastered how chip density and physical shape are balanced during floorplanning using the **Utilization Factor** (the ratio of netlist area to total core area).
+   * Learned to manipulate the **Aspect Ratio** (the core's height-to-width proportion) to meet design and routing constraints.
+
+3. **Automated Open-Source ASIC Flows**
+   * Gained hands-on experience with **OpenLANE**, an automated, open-source RTL-to-GDSII compiler flow.
+   * Explored how this framework orchestrates the entire physical design pipeline targeting the **SkyWater 130nm Open PDK** with zero human intervention.
+
+4. **Toolchain Orchestration**
+   * Discovered how discrete open-source EDA tools seamlessly interact within the automated environment.
+   * Utilized **Yosys/ABC** for logical synthesis, **OpenROAD** for floorplanning and routing, **Magic** for layout visualization, and **OpenSTA** for timing verification.
+
+5. **Silicon Fabrication Mechanics**
+   * Mapped abstract CMOS schematics directly to the physical **16-Mask CMOS Process**.
+   * Understood how a precise sequence of photolithography masks layer-by-layer constructs N-wells, active areas, polysilicon gates, and metal routing planes.
+
+6. **Lithography-Driven Design Rules**
+   * Learned that Design Rule Checks (DRC)—such as minimum wire width, wire spacing, and wire pitch—are not arbitrary guidelines.
+   * Understood them as strict physical constraints imposed directly by the resolution limits of optical lithography tools.
+
+7. **Real-World Static Timing Analysis (STA)**
+   * Transitioned from ideal clock assumptions to analyzing real clock distribution networks.
+   * Mastered how clock network buffer delays create spatial variance (**Clock Skew**), which directly alters the setup and hold slack equations of sequential networks.
+
+8. **Standard Cell Characterization**
+   * Executed a full layout-to-simulation loop by extracting SPICE netlists from a custom inverter layout inside Magic (`ext2spice`).
+   * Utilized **Ngspice** waveforms to calculate critical cell parameters like propagation delay ($50\% V_{dd}$) and transition slew ($20\%\text{--}80\% V_{dd}$).
+
+
+-----
+
+## Tools & Environment
+
+| Tool | Purpose |
+|---|---|
+| **OpenLANE** | RTL-to-GDSII automation flow |
+| **Yosys** | RTL synthesis |
+| **OpenROAD** | Floorplan, Placement, CTS, Routing |
+| **Magic** | Layout editor, DRC, LVS |
+| **OpenSTA** | Static Timing Analysis |
+| **ngspice** | SPICE simulation |
+| **TritonRoute** | Detailed routing |
+| **Netgen** | LVS (Layout vs Schematic) |
+| **Sky130 PDK** | SkyWater 130nm open-source PDK |
+
+---
+
+## 🙏 Acknowledgements
+
+A huge thank you to **Kunal Ghosh** (Co-founder, VSD Corp. Pvt. Ltd.) and **Nickson P Jose** (Physical Design Engineer) for creating such a wonderful, empowering platform for students and VLSI enthusiasts. This well-structured and genuinely practical workshop breaks down complex industry concepts into digestible steps. Running a real CPU (`picorv32a`) from RTL to GDSII using entirely open-source tools is an incredible milestone—and this course made it entirely accessible.
+
+* **Kunal Ghosh** — Co-founder, VSD (VLSI System Design), for pioneering accessible, high-quality cloud-based VLSI education.
+* **Nickson P Jose** — for providing the foundational `vsdstdcelldesign` repository used to bridge layout design with SPICE simulations in the labs.
 
 
