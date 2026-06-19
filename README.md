@@ -4,7 +4,7 @@ RTL-to-GDSII physical design flow using OpenLANE &amp; Sky130 PDK | VSD SoC Desi
 # Introduction to Chips, Pads, Core, Die, and IPs
 
 ## 📖 Overview
-This document summarizes the core concepts from Day 1 of the VSD Course. It covers the fundamental anatomy of a System on a Chip (SoC), key semiconductor terminology, the software-to-hardware bridge (ISA), and the initial stages of the physical design flow (RTL to GDSII).
+This document summarizes the core concepts of the VSD Course - SoC Design and Planning Workshop. It covers the fundamental anatomy of a System on a Chip (SoC), key semiconductor terminology, the software-to-hardware bridge (ISA), and the initial stages of the physical design flow (RTL to GDSII).
 
 ---
 
