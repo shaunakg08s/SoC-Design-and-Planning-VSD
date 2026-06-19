@@ -422,6 +422,15 @@ If two signal wires cross or get too close, a **Signal Short** occurs, resulting
 
 ---
 
+## Routing Complete 
+To run routing :
+```tcl
+   run_routing
+```
+
+![image](./images/routing_completed.png)
+
+
 ## 🎓 Key Learnings & Takeaways
 
 As an Electronics and Communication Engineering (ECE) student and VLSI enthusiast, this course effectively bridged the gap between academic textbook theory and industry-standard ASIC physical design workflows.
